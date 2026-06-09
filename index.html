@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoServer WMS Overlay on OpenLayers (Google-like)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+    .overlay-ui {
+      position: absolute;
+      top: 62px;
+      left: 11px;
+      pointer-events: auto;
+
+
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      min-width: 260px;
+    }
+
+    .overlay-ui h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    label {
+      font-size: 12px;
+      color: #222;
+    }
+
+    input[type="range"] {
+      width: 160px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #444;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div class="overlay-ui" role="group" aria-label="Overlay controls">
+    <h3>GeoServer overlay controls</h3>
+
+    <div class="row">
+      <label for="opacity">Opacity</label>
+      <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.7" />
+      <span id="opacityVal" style="font-size:12px; min-width:42px; text-align:right;">0.70</span>
+    </div>
+
+    <div class="row" style="justify-content: space-between;">
+      <button id="basemap" class="btn" type="button">Basemap</button>
+      <span style="font-size:11px;color:#444;" id="basemapVal">OSM</span>
+    </div>
+
+
+
+ 
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <script>
+    // ---- Configuration from your provided working WMS request ----
+    // Base URL without GetMap params:
+    const WMS_BASE_URL = 'http://13.53.38.166/geoserver/yash_practise/wms';
+
+
+    const WMS_LAYER_NAME = 'yash_practise:auda_map_new1_fixed_clip';
+    const WMS_CRS = 'EPSG:32643';
+
+
+    // Base OSM
+    // ---- Basemaps (switchable) ----
+    const osm = new ol.layer.Tile({
+      source: new ol.source.OSM(),
+      zIndex: 0
+    });
+
+    const osmCycle = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://{a-c}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+      }),
+      zIndex: 0
+    });
+
+    // Google-like basemaps via public tile providers.
+    // Note: true Google Maps tiles require Google APIs; these are visual alternatives.
+    const googleRoad = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'
+      }),
+      zIndex: 0
+    });
+
+    const googleSatellite = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+      }),
+      zIndex: 0
+    });
+
+    const googleHybrid = new ol.layer.Tile({
+      source: new ol.source.XYZ({
+        url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}'
+      }),
+      zIndex: 0
+    });
+
+    const baseMaps = {
+      OSM: osm,
+      CyclOSM: osmCycle,
+      'Google Road': googleRoad,
+      'Google Satellite': googleSatellite,
+      'Google Hybrid': googleHybrid
+    };
+
+
+    // default basemap
+    let base = osm;
+
+
+
+    // AUDA Raster Layer
+    const overlay = new ol.layer.Tile({
+      opacity: 0.7,
+      visible: true,
+      zIndex: 10,
+      source: new ol.source.TileWMS({
+        url: WMS_BASE_URL,
+        params: {
+          LAYERS: WMS_LAYER_NAME,
+          FORMAT: 'image/png',
+          TRANSPARENT: true,
+          TILED: true,
+          SRS: WMS_CRS
+        },
+        serverType: 'geoserver',
+        crossOrigin: 'anonymous'
+      })
+    });
+
+    // Raster extent from GeoServer
+    const extent32643 = [
+      210587.668610494,
+      2518918.383155992,
+      281163.45468249416,
+      2585852.858741992
+    ];
+
+    const extent3857 = ol.proj.transformExtent(
+      extent32643,
+      'EPSG:32643',
+      'EPSG:3857'
+    );
+
+    const view = new ol.View({
+      center: ol.extent.getCenter(extent3857),
+      zoom: 13
+    });
+
+    const map = new ol.Map({
+      target: 'map',
+      layers: [base, overlay],
+      view: view
+    });
+
+    // Basemap switcher (quick toggle)
+    // Replaces current basemap layer without touching overlay.
+    let basemapIndex = 0;
+    const basemapKeys = Object.keys(baseMaps);
+
+    // Basemap switcher button
+    const basemapBtn = document.getElementById('basemap');
+    const basemapVal = document.getElementById('basemapVal');
+
+    basemapBtn.addEventListener('click', () => {
+
+      basemapIndex = (basemapIndex + 1) % basemapKeys.length;
+      const nextKey = basemapKeys[basemapIndex];
+      const nextLayer = baseMaps[nextKey];
+
+      map.getLayers().setAt(0, nextLayer);
+      base = nextLayer;
+      basemapVal.textContent = nextKey;
+    });
+
+    // (opacity slider element already defined above)
+
+
+    const opacityVal = document.getElementById('opacityVal');
+
+    // Initial fit
+
+    setTimeout(() => {
+      map.getView().fit(extent3857, {
+        padding: [50, 50, 50, 50],
+        maxZoom: 18
+      });
+    }, 500);
+
+
+    // Opacity control
+    opacity.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      overlay.setOpacity(value);
+      opacityVal.textContent = value.toFixed(2);
+    });
+
+ 
+
+  </script>
+</body>
+
+</html>
