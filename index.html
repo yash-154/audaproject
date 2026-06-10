@@ -243,14 +243,21 @@
 
 
     // Opacity control
+<<<<<<< HEAD
     const opacityEl = document.getElementById('opacity');
     opacityEl.addEventListener('input', (e) => {
+=======
+    opacity.addEventListener('input', (e) => {
+>>>>>>> d9ce427 (Fix WMS URL protocol and JS opacity listener)
       const value = parseFloat(e.target.value);
       overlay.setOpacity(value);
       opacityVal.textContent = value.toFixed(2);
     });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d9ce427 (Fix WMS URL protocol and JS opacity listener)
  
 
   </script>
