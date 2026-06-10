@@ -25,7 +25,6 @@
       left: 11px;
       pointer-events: auto;
 
-
       z-index: 1000;
       background: rgba(255, 255, 255, 0.95);
       border: 1px solid rgba(0, 0, 0, 0.15);
@@ -94,11 +93,6 @@
       <button id="basemap" class="btn" type="button">Basemap</button>
       <span style="font-size:11px;color:#444;" id="basemapVal">OSM</span>
     </div>
-
-
-
- 
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
@@ -107,13 +101,10 @@
     // Base URL without GetMap params:
     const WMS_BASE_URL = 'https://13.53.38.166/geoserver/yash_practise/wms';
 
-
     const WMS_LAYER_NAME = 'yash_practise:auda_map_new1_fixed_clip';
     const WMS_CRS = 'EPSG:32643';
 
-
     // Base OSM
-    // ---- Basemaps (switchable) ----
     const osm = new ol.layer.Tile({
       source: new ol.source.OSM(),
       zIndex: 0
@@ -127,7 +118,6 @@
     });
 
     // Google-like basemaps via public tile providers.
-    // Note: true Google Maps tiles require Google APIs; these are visual alternatives.
     const googleRoad = new ol.layer.Tile({
       source: new ol.source.XYZ({
         url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'
@@ -157,11 +147,8 @@
       'Google Hybrid': googleHybrid
     };
 
-
     // default basemap
     let base = osm;
-
-
 
     // AUDA Raster Layer
     const overlay = new ol.layer.Tile({
@@ -190,11 +177,7 @@
       2585852.858741992
     ];
 
-    const extent3857 = ol.proj.transformExtent(
-      extent32643,
-      'EPSG:32643',
-      'EPSG:3857'
-    );
+    const extent3857 = ol.proj.transformExtent(extent32643, 'EPSG:32643', 'EPSG:3857');
 
     const view = new ol.View({
       center: ol.extent.getCenter(extent3857),
@@ -207,32 +190,23 @@
       view: view
     });
 
-    // Basemap switcher (quick toggle)
-    // Replaces current basemap layer without touching overlay.
+    // Basemap switcher button
     let basemapIndex = 0;
     const basemapKeys = Object.keys(baseMaps);
 
-    // Basemap switcher button
     const basemapBtn = document.getElementById('basemap');
     const basemapVal = document.getElementById('basemapVal');
 
     basemapBtn.addEventListener('click', () => {
-
       basemapIndex = (basemapIndex + 1) % basemapKeys.length;
       const nextKey = basemapKeys[basemapIndex];
       const nextLayer = baseMaps[nextKey];
-
       map.getLayers().setAt(0, nextLayer);
       base = nextLayer;
       basemapVal.textContent = nextKey;
     });
 
-    // (opacity slider element already defined above)
-
-
     const opacityVal = document.getElementById('opacityVal');
-
-    // Initial fit
 
     setTimeout(() => {
       map.getView().fit(extent3857, {
@@ -241,26 +215,15 @@
       });
     }, 500);
 
-
     // Opacity control
-<<<<<<< HEAD
     const opacityEl = document.getElementById('opacity');
     opacityEl.addEventListener('input', (e) => {
-=======
-    opacity.addEventListener('input', (e) => {
->>>>>>> d9ce427 (Fix WMS URL protocol and JS opacity listener)
       const value = parseFloat(e.target.value);
       overlay.setOpacity(value);
       opacityVal.textContent = value.toFixed(2);
     });
-
-<<<<<<< HEAD
-
-=======
->>>>>>> d9ce427 (Fix WMS URL protocol and JS opacity listener)
- 
-
   </script>
 </body>
 
 </html>
+
